@@ -42,6 +42,7 @@ export default function Home() {
 							height={160}
 							className="mx-auto"
 						/>
+						<div className="w-24 h-1 bg-[#D4AF37] mx-auto my-8" />
 						<p className="text-2xl md:text-3xl text-gray-600 mb-8">
 							Coming Soon to Transform Your Real Estate Experience in Dubai
 						</p>
