@@ -1,10 +1,57 @@
 "use client";
 
+import { useState } from "react";
+
 export default function ContactForm() {
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+	const [isLoading, setIsLoading] = useState(false);
+	const [formStatus, setFormStatus] = useState<{
+		type: "success" | "error" | null;
+		message: string;
+	}>({ type: null, message: "" });
+
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		// Add your form submission logic here
-		console.log("Form submitted");
+		setIsLoading(true);
+		setFormStatus({ type: null, message: "" });
+
+		const formData = new FormData(e.currentTarget);
+		const data = {
+			firstName: formData.get("firstName"),
+			lastName: formData.get("lastName"),
+			email: formData.get("email"),
+			phone: formData.get("phone"),
+			country: formData.get("country"),
+			message: formData.get("message"),
+		};
+		console.log(data);
+		try {
+			const response = await fetch("/api/contact", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			});
+			const result = await response.json();
+			console.log(result);
+			if (result.error || result.error !== null) {
+				console.log("Failed to send message");
+				throw new Error("Failed to send message");
+			}
+
+			setFormStatus({
+				type: "success",
+				message: "Message sent successfully! We'll get back to you soon.",
+			});
+		} catch (error) {
+			console.log(error);
+			setFormStatus({
+				type: "error",
+				message: "Failed to send message. Please try again later.",
+			});
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (
@@ -12,6 +59,17 @@ export default function ContactForm() {
 			<h2 className="text-3xl font-bold text-center mb-8 text-[#0A192F]">
 				Contact Us
 			</h2>
+			{formStatus.type && (
+				<div
+					className={`mb-6 p-4 rounded-lg ${
+						formStatus.type === "success"
+							? "bg-green-100 text-green-700"
+							: "bg-red-100 text-red-700"
+					}`}
+				>
+					{formStatus.message}
+				</div>
+			)}
 			<form onSubmit={handleSubmit} className="space-y-6">
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div>
@@ -24,6 +82,8 @@ export default function ContactForm() {
 						<input
 							type="text"
 							id="firstName"
+							name="firstName"
+							required
 							className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 							placeholder="Enter your first name"
 						/>
@@ -38,6 +98,8 @@ export default function ContactForm() {
 						<input
 							type="text"
 							id="lastName"
+							name="lastName"
+							required
 							className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 							placeholder="Enter your last name"
 						/>
@@ -53,6 +115,8 @@ export default function ContactForm() {
 					<input
 						type="email"
 						id="email"
+						name="email"
+						required
 						className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 						placeholder="Enter your email"
 					/>
@@ -67,11 +131,12 @@ export default function ContactForm() {
 					<input
 						type="tel"
 						id="phone"
+						name="phone"
+						required
 						className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 						placeholder="Enter your phone number"
 					/>
 				</div>
-				{/* field for country */}
 				<div>
 					<label
 						htmlFor="country"
@@ -82,6 +147,8 @@ export default function ContactForm() {
 					<input
 						type="text"
 						id="country"
+						name="country"
+						required
 						className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 						placeholder="Enter your country"
 					/>
@@ -95,6 +162,8 @@ export default function ContactForm() {
 					</label>
 					<textarea
 						id="message"
+						name="message"
+						required
 						rows={4}
 						className="w-full px-4 py-2 border border-gray-200 rounded-lg text-gray-500 focus:ring-2 focus:ring-[#D4AF37] focus:border-transparent"
 						placeholder="Type of Property you are looking for?"
@@ -102,9 +171,10 @@ export default function ContactForm() {
 				</div>
 				<button
 					type="submit"
-					className="w-full bg-[#ffda62] text-[#0A192F] py-3 px-6 rounded-lg font-semibold hover:bg-[#e8b921] transition-colors duration-200"
+					disabled={isLoading}
+					className="w-full bg-[#ffda62] text-[#0A192F] py-3 px-6 rounded-lg font-semibold hover:bg-[#e8b921] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					Send Message
+					{isLoading ? "Sending..." : "Send Message"}
 				</button>
 			</form>
 		</div>
